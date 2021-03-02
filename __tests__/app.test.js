@@ -1,65 +1,101 @@
 require('dotenv').config();
-
 const { execSync } = require('child_process');
-
 const fakeRequest = require('supertest');
 const app = require('../lib/app');
 const client = require('../lib/client');
 
 describe('app routes', () => {
-  describe('routes', () => {
-    let token;
+    describe('routes', () => {
+        let token;
   
-    beforeAll(async done => {
-      execSync('npm run setup-db');
+        beforeAll(async done => {
+            execSync('npm run setup-db');
   
-      client.connect();
+            client.connect();
   
-      const signInData = await fakeRequest(app)
-        .post('/auth/signup')
-        .send({
-          email: 'jon@user.com',
-          password: '1234'
-        });
+            const signInData = await fakeRequest(app)
+                .post('/auth/signup')
+                .send({
+                    email: 'cjvela1@outlook.com',
+                    password: '123456'
+                });
       
       token = signInData.body.token; // eslint-disable-line
+
+            return done();
+        });
   
-      return done();
+        afterAll(done => {
+            return client.end(done);
+        });
+
+        const todo = {
+            todo: 'walk the dog',
+            completed: false,
+        };
+
+        const dbTodo = {
+            ...todo,
+            user_id: 2,
+            id: 4,
+        };
+
+        test('create a new todo as the test user', async() => {
+            const todo = {
+                todo: 'walk the dog',
+                completed: false,
+            };
+
+            const data = await fakeRequest(app)
+                .post('/api/todos')
+                .send(todo)
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(data.body).toEqual(dbTodo);
+        });
+        
+        test('gets a list of all todos for the given user', async() => {
+            const todos = [{
+                todo: 'walk the dog',
+                completed: false,
+                user_id: 2,
+                id: 4,
+            }];
+
+            const data = await fakeRequest(app)
+                .get('/api/todos')
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(data.body).toEqual(todos);
+        });
+
+        test('updates a todo to "true" for the given user', async() => {
+            const updatedTodo = {
+                todo: 'walk the dog',
+                completed: true,
+                user_id: 2,
+                id: 4,
+            };
+
+            const update = await fakeRequest(app)
+                .put('/api/todos/4')
+                .send(updatedTodo)
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+                console.log(update.body);
+            const updatedData = await fakeRequest(app)
+                .get('/api/todos/4')
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(updatedData.body).toEqual(updatedTodo);
+        });
     });
-  
-    afterAll(done => {
-      return client.end(done);
-    });
-
-    test('returns animals', async() => {
-
-      const expectation = [
-        {
-          'id': 1,
-          'name': 'bessie',
-          'coolfactor': 3,
-          'owner_id': 1
-        },
-        {
-          'id': 2,
-          'name': 'jumpy',
-          'coolfactor': 4,
-          'owner_id': 1
-        },
-        {
-          'id': 3,
-          'name': 'spot',
-          'coolfactor': 10,
-          'owner_id': 1
-        }
-      ];
-
-      const data = await fakeRequest(app)
-        .get('/animals')
-        .expect('Content-Type', /json/)
-        .expect(200);
-
-      expect(data.body).toEqual(expectation);
-    });
-  });
 });
