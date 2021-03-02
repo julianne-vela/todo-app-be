@@ -16,8 +16,8 @@ describe('app routes', () => {
             const signInData = await fakeRequest(app)
                 .post('/auth/signup')
                 .send({
-                    email: 'jon@arbuckle.com',
-                    hash: '1234'
+                    email: 'cjvela@outlook.com',
+                    password: '12345'
                 });
       
       token = signInData.body.token; // eslint-disable-line
@@ -30,21 +30,19 @@ describe('app routes', () => {
         });
 
         const todo = {
-            id: 1,
-            todo: 'wash the dishes',
+            todo: 'walk the dog',
             completed: false,
-            user_id: 1
         };
 
         const dbTodo = {
             ...todo,
-            user_id: 1,
-            id: 1,
+            user_id: 2,
+            id: 2,
         };
 
         test('create a new todo as the test user', async() => {
             const todo = {
-                todo: 'laundry',
+                todo: 'walk the dog',
                 completed: false,
             };
 
