@@ -16,12 +16,12 @@ describe('app routes', () => {
             const signInData = await fakeRequest(app)
                 .post('/auth/signup')
                 .send({
-                    email: 'cjvela@outlook.com',
-                    password: '12345'
+                    email: 'cjvela1@outlook.com',
+                    password: '123456'
                 });
       
       token = signInData.body.token; // eslint-disable-line
-  
+
             return done();
         });
   
@@ -37,7 +37,7 @@ describe('app routes', () => {
         const dbTodo = {
             ...todo,
             user_id: 2,
-            id: 2,
+            id: 4,
         };
 
         test('create a new todo as the test user', async() => {
@@ -54,6 +54,48 @@ describe('app routes', () => {
                 .expect(200);
 
             expect(data.body).toEqual(dbTodo);
+        });
+        
+        test('gets a list of all todos for the given user', async() => {
+            const todos = [{
+                todo: 'walk the dog',
+                completed: false,
+                user_id: 2,
+                id: 4,
+            }];
+
+            const data = await fakeRequest(app)
+                .get('/api/todos')
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(data.body).toEqual(todos);
+        });
+
+        test('updates a todo to "true" for the given user', async() => {
+            const updatedTodo = {
+                todo: 'walk the dog',
+                completed: true,
+                user_id: 2,
+                id: 4,
+            };
+
+            const update = await fakeRequest(app)
+                .put('/api/todos/4')
+                .send(updatedTodo)
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+                console.log(update.body);
+            const updatedData = await fakeRequest(app)
+                .get('/api/todos/4')
+                .set('Authorization', token)
+                .expect('Content-Type', /json/)
+                .expect(200);
+
+            expect(updatedData.body).toEqual(updatedTodo);
         });
     });
 });
